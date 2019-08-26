@@ -3,14 +3,11 @@
 namespace Heidelpay\MGW\Model\Observer;
 
 use heidelpayPHP\Resources\Payment;
-use heidelpayPHP\Resources\TransactionTypes\Charge;
 use Magento\Framework\Api\SearchCriteriaBuilder;
-use Magento\Framework\Authorization;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Api\Data\OrderInterface;
 use Magento\Sales\Api\OrderRepositoryInterface;
-use Magento\Sales\Model\Order;
 
 /**
  * Observer for payment.failed webhook events
@@ -66,12 +63,8 @@ class PaymentFailedObserver implements ObserverInterface
      */
     public function execute(Observer $observer): void
     {
-        /** @var Authorization|Charge|Payment $payment */
+        /** @var Payment $payment */
         $payment = $observer->getEvent()->getData('resource');
-
-        if (!$payment instanceof Payment) {
-            $payment = $payment->getPayment();
-        }
 
         $searchCriteria = $this->_searchCriteriaBuilder
             ->addFilter('increment_id', $payment->getExternalId(), 'eq')
@@ -81,10 +74,7 @@ class PaymentFailedObserver implements ObserverInterface
         $orders = $this->_orderRepository->getList($searchCriteria)->getItems();
 
         if (count($orders) > 0) {
-            $order = $orders[0];
-            $order->setState(Order::STATE_PAYMENT_REVIEW);
-
-            $this->_orderRepository->save($order);
+            $this->_orderManagement->cancel($orders[0]->getId());
         }
     }
 }
