@@ -10,15 +10,15 @@ define(
             redirectUrl: 'checkout/onepage/success',
 
             defaults: {
-                template: 'Heidelpay_MGW/payment/invoice_guaranteed'
+                template: 'Heidelpay_MGW/payment/invoice_factoring'
             },
 
             initializeForm: function () {
                 this.initializeCustomerForm(
-                    'invoice-guaranteed-customer',
-                    'invoice-guaranteed-customer-error'
+                    'invoice-factoring-customer',
+                    'invoice-factoring-customer-error'
                 );
-                this.resourceProvider = this.sdk.InvoiceGuaranteed();
+                this.resourceProvider = this.sdk.InvoiceFactoring();
             },
 
             allInputsValid: function () {

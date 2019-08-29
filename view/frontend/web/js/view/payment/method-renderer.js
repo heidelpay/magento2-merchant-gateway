@@ -34,6 +34,10 @@ define(
                 component: 'Heidelpay_MGW/js/view/payment/method-renderer/invoice'
             },
             {
+                type: 'hpmgw_invoice_factoring',
+                component: 'Heidelpay_MGW/js/view/payment/method-renderer/invoice_factoring'
+            },
+            {
                 type: 'hpmgw_invoice_guaranteed',
                 component: 'Heidelpay_MGW/js/view/payment/method-renderer/invoice_guaranteed'
             },

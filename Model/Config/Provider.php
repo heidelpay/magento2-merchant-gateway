@@ -43,6 +43,7 @@ class Provider implements ConfigProviderInterface
         Config::METHOD_FLEXIPAY_DIRECT,
         Config::METHOD_IDEAL,
         Config::METHOD_INVOICE,
+        Config::METHOD_INVOICE_FACTORING,
         Config::METHOD_INVOICE_GUARANTEED,
         Config::METHOD_PAYPAL,
         Config::METHOD_SOFORT,
