@@ -2,8 +2,10 @@
 
 namespace Heidelpay\MGW\Model\Method;
 
+use heidelpayPHP\Exceptions\HeidelpayApiException;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Payment\Gateway\Command\CommandManagerInterface;
 use Magento\Payment\Gateway\Command\CommandPoolInterface;
 use Magento\Payment\Gateway\Config\ValueHandlerPoolInterface;
@@ -103,6 +105,9 @@ class Base extends Adapter
      *
      * @param Order $order
      * @return string
+     *
+     * @throws NoSuchEntityException
+     * @throws HeidelpayApiException
      */
     public function getAdditionalPaymentInformation(Order $order): string
     {

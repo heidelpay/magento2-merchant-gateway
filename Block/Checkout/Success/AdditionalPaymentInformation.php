@@ -3,11 +3,12 @@
 namespace Heidelpay\MGW\Block\Checkout\Success;
 
 use Heidelpay\MGW\Model\Method\Base;
+use heidelpayPHP\Exceptions\HeidelpayApiException;
 use Magento\Checkout\Model\Session;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Model\MethodInterface;
-use Magento\Sales\Model\Order;
 
 /**
  * Onepage Checkout Success Payment Information Block
@@ -58,10 +59,12 @@ class AdditionalPaymentInformation extends Template
      * Returns additional payment information for the customer.
      *
      * @return string|null
+     *
+     * @throws HeidelpayApiException
+     * @throws NoSuchEntityException
      */
     public function getAdditionalPaymentInformation(): ?string
     {
-        /** @var Order $order */
         $order = $this->_checkoutSession->getLastRealOrder();
 
         /** @var MethodInterface $methodInstance */

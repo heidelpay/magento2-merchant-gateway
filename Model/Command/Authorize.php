@@ -72,7 +72,7 @@ class Authorize extends AbstractCommand
         if ($authorization->isError()) {
             $errorMessage = $authorization->getMessage();
             $this->_logger->error($errorMessage->getMerchant() . ' [' . $errorMessage->getCode() . ']');
-            throw new LocalizedException(__('Failed to authorize payment.'));
+            throw new LocalizedException(__($errorMessage->getCustomer()));
         }
 
         $this->_setPaymentTransaction($payment, $authorization);

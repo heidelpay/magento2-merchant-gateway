@@ -3,10 +3,11 @@
 namespace Heidelpay\MGW\Model\Method;
 
 use Heidelpay\MGW\Model\Config;
-use heidelpayPHP\Resources\Payment;
+use heidelpayPHP\Exceptions\HeidelpayApiException;
 use heidelpayPHP\Resources\TransactionTypes\Charge;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Payment\Gateway\Command\CommandManagerInterface;
 use Magento\Payment\Gateway\Command\CommandPoolInterface;
@@ -102,10 +103,11 @@ class Invoice extends Base
 
     /**
      * @inheritDoc
+     * @throws NoSuchEntityException
+     * @throws HeidelpayApiException
      */
     public function getAdditionalPaymentInformation(Order $order): string
     {
-        /** @var Payment $payment */
         $payment = $this->_moduleConfig
             ->getHeidelpayClient()
             ->fetchPaymentByOrderId($order->getIncrementId());
