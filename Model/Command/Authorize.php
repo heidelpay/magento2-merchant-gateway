@@ -5,7 +5,6 @@ namespace Heidelpay\MGW\Model\Command;
 use Heidelpay\MGW\Model\Method\Observer\BaseDataAssignObserver;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
 use Magento\Framework\Exception\LocalizedException;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment as OrderPayment;
 
 /**
@@ -36,7 +35,6 @@ class Authorize extends AbstractCommand
     /**
      * @inheritDoc
      * @throws LocalizedException
-     * @throws \heidelpayPHP\Exceptions\HeidelpayApiException
      */
     public function execute(array $commandSubject)
     {
@@ -46,7 +44,6 @@ class Authorize extends AbstractCommand
         /** @var float $amount */
         $amount = $commandSubject['amount'];
 
-        /** @var Order $order */
         $order = $payment->getOrder();
 
         /** @var string $resourceId */
@@ -66,13 +63,15 @@ class Authorize extends AbstractCommand
             );
             $order->addCommentToStatusHistory('heidelpay paymentId: ' . $authorization->getPaymentId());
         } catch (HeidelpayApiException $e) {
-            $this->_logger->error($e->getMerchantMessage(), ['incrementId' => $order->getIncrementId()]);
+            $this->_logger->error($e->getMerchantMessage() . '[' . $e->getCode() . ']', ['incrementId' => $order->getIncrementId()]);
             throw new LocalizedException(__($e->getClientMessage()));
         }
 
         $this->addHeidelpayIdsToHistory($order, $authorization);
 
         if ($authorization->isError()) {
+            $errorMessage = $authorization->getMessage();
+            $this->_logger->error($errorMessage->getMerchant() . ' [' . $errorMessage->getCode() . ']');
             throw new LocalizedException(__('Failed to authorize payment.'));
         }
 

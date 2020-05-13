@@ -2,9 +2,9 @@
 
 namespace Heidelpay\MGW\Controller\Payment;
 
+use Exception;
 use Heidelpay\MGW\Helper\Payment as PaymentHelper;
 use Heidelpay\MGW\Model\Config;
-use heidelpayPHP\Constants\ApiResponseCodes;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
 use heidelpayPHP\Resources\Payment;
 use Magento\Checkout\Model\Session;
@@ -108,7 +108,7 @@ abstract class AbstractPaymentAction extends Action
 
                 $response = $this->abortCheckout($message->getCustomer());
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $message = $e->getMessage();
 
             if ($e instanceof HeidelpayApiException) {

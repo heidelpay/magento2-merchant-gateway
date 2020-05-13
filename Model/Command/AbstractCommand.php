@@ -5,9 +5,9 @@ namespace Heidelpay\MGW\Model\Command;
 use Heidelpay\MGW\Helper\Order;
 use Heidelpay\MGW\Model\Config;
 use Heidelpay\MGW\Model\Method\Observer\BaseDataAssignObserver;
+use heidelpayPHP\Exceptions\HeidelpayApiException;
 use heidelpayPHP\Heidelpay;
 use heidelpayPHP\Resources\AbstractHeidelpayResource;
-use heidelpayPHP\Resources\Customer;
 use heidelpayPHP\Resources\TransactionTypes\AbstractTransactionType;
 use heidelpayPHP\Resources\TransactionTypes\Authorization;
 use heidelpayPHP\Resources\TransactionTypes\Charge;
@@ -21,7 +21,6 @@ use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Model\Order as SalesOrder;
 use Magento\Sales\Model\Order\Payment as OrderPayment;
 use Psr\Log\LoggerInterface;
-
 use function get_class;
 
 /**
@@ -130,13 +129,13 @@ abstract class AbstractCommand implements CommandInterface
      * Returns the customer ID for given current payment or quote.
      *
      * @param InfoInterface $payment
-     * @param \Magento\Sales\Model\Order $order
+     * @param SalesOrder $order
      * @return string|null
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @throws \heidelpayPHP\Exceptions\HeidelpayApiException
+     * @throws HeidelpayApiException
      */
-    protected function _getCustomerId(InfoInterface $payment, \Magento\Sales\Model\Order $order): ?string
+    protected function _getCustomerId(InfoInterface $payment, SalesOrder $order): ?string
     {
         /** @var string|null $customerId */
         $customerId = $payment->getAdditionalInformation(BaseDataAssignObserver::KEY_CUSTOMER_ID);
@@ -145,7 +144,6 @@ abstract class AbstractCommand implements CommandInterface
             return null;
         }
 
-        /** @var Customer $customer */
         $customer = $this->_getClient()->fetchCustomer($customerId);
 
         if (!$this->_orderHelper->validateGatewayCustomerAgainstOrder($order, $customer)) {

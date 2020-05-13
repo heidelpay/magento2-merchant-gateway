@@ -4,7 +4,6 @@ namespace Heidelpay\MGW\Model\Command;
 
 use heidelpayPHP\Constants\CancelReasonCodes;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
-use heidelpayPHP\Resources\Payment;
 use heidelpayPHP\Resources\TransactionTypes\Cancellation;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
@@ -43,25 +42,27 @@ class Cancel extends AbstractCommand
      */
     public function execute(array $commandSubject)
     {
-        /** @var \Magento\Sales\Model\Order\Payment $payment */
+        /** @var Order\Payment $payment */
         $payment = $commandSubject['payment']->getPayment();
 
-        /** @var Order $order */
         $order = $payment->getOrder();
 
-        /** @var Payment $hpPayment */
         $hpPayment = $this->_getClient()->fetchPaymentByOrderId($order->getIncrementId());
 
         if ($hpPayment->isCanceled()) {
             return;
         }
 
-        /** @var Cancellation[] $cancellations */
-        $cancellations = $hpPayment->cancelAmount($commandSubject['amount'] ?? null, static::REASON);
-
-        if (count($cancellations) > 0) {
-            $lastCancellation = end($cancellations);
-            $payment->setLastTransId($lastCancellation->getId());
+        try {
+            /** @var Cancellation[] $cancellations */
+            $cancellations = $hpPayment->cancelAmount($commandSubject['amount'] ?? null, static::REASON);
+            if (count($cancellations) > 0) {
+                $lastCancellation = end($cancellations);
+                $payment->setLastTransId($lastCancellation->getId());
+            }
+        } catch (HeidelpayApiException $e) {
+            $this->_logger->error($e->getMessage() . ' [' . $e->getCode() . ']');
+            throw $e;
         }
     }
 }

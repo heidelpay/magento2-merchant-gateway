@@ -2,11 +2,11 @@
 
 namespace Heidelpay\MGW\Model\Command;
 
+use Heidelpay\MGW\Helper\Order as OrderHelper;
 use Heidelpay\MGW\Model\Config;
 use Heidelpay\MGW\Model\Method\Observer\BaseDataAssignObserver;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
 use heidelpayPHP\Resources\AbstractHeidelpayResource;
-use heidelpayPHP\Resources\Payment;
 use heidelpayPHP\Resources\TransactionTypes\Authorization;
 use heidelpayPHP\Resources\TransactionTypes\Charge;
 use Magento\Checkout\Model\Session;
@@ -59,7 +59,7 @@ class Capture extends AbstractCommand
         Session $checkoutSession,
         Config $config,
         LoggerInterface $logger,
-        \Heidelpay\MGW\Helper\Order $orderHelper,
+        OrderHelper $orderHelper,
         UrlInterface $urlBuilder,
         BuilderInterface $transactionBuilder
     )
@@ -72,7 +72,6 @@ class Capture extends AbstractCommand
     /**
      * @inheritDoc
      * @throws LocalizedException
-     * @throws HeidelpayApiException
      */
     public function execute(array $commandSubject)
     {
@@ -82,7 +81,6 @@ class Capture extends AbstractCommand
         /** @var float $amount */
         $amount = $commandSubject['amount'];
 
-        /** @var Order $order */
         $order = $payment->getOrder();
 
         /** @var string|null $paymentId */
@@ -96,13 +94,15 @@ class Capture extends AbstractCommand
                 $order->addCommentToStatusHistory('heidelpay paymentId: ' . $charge->getPaymentId());
             }
         } catch (HeidelpayApiException $e) {
-            $this->_logger->error($e->getMerchantMessage(), ['incrementId' => $order->getIncrementId()]);
+            $this->_logger->error($e->getMerchantMessage() . '[' . $e->getCode() . ']', ['incrementId' => $order->getIncrementId()]);
             throw new LocalizedException(__($e->getClientMessage()));
         }
 
         $this->addHeidelpayIdsToHistory($order, $charge);
 
         if ($charge->isError()) {
+            $errorMessage = $charge->getMessage();
+            $this->_logger->error($errorMessage->getMerchant() . ' [' . $errorMessage->getCode() . ']');
             throw new LocalizedException(__('Failed to charge payment.'));
         }
 
@@ -121,7 +121,6 @@ class Capture extends AbstractCommand
      */
     protected function _chargeExisting(string $paymentId, float $amount): Charge
     {
-        /** @var Payment $payment */
         $payment = $this->_getClient()->fetchPayment($paymentId);
 
         /** @var Authorization|null $authorization */

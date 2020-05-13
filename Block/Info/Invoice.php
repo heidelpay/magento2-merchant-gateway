@@ -2,11 +2,11 @@
 
 namespace Heidelpay\MGW\Block\Info;
 
-use Heidelpay\MGW\Helper\Order as OrderHelper;
 use Heidelpay\MGW\Model\Config;
-use heidelpayPHP\Heidelpay;
+use heidelpayPHP\Exceptions\HeidelpayApiException;
 use heidelpayPHP\Resources\Payment;
 use heidelpayPHP\Resources\TransactionTypes\Charge;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Element\Template;
 use Magento\Payment\Block\Info;
 use Magento\Sales\Model\Order;
@@ -46,19 +46,22 @@ class Invoice extends Info
     /**
      * @var Payment
      */
-    protected $_payment = null;
+    protected $_payment;
+
+    /**
+     * @var Charge
+     */
+    protected $charge;
 
     /**
      * Invoice constructor.
      * @param Template\Context $context
      * @param Config $moduleConfig
-     * @param OrderHelper $orderHelper
      * @param array $data
      */
     public function __construct(
         Template\Context $context,
         Config $moduleConfig,
-        OrderHelper $orderHelper,
         array $data = []
     ) {
         parent::__construct($context, $data);
@@ -78,28 +81,34 @@ class Invoice extends Info
     /**
      * Returns the first charge for the payment.
      *
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \heidelpayPHP\Exceptions\HeidelpayApiException
+     * @throws LocalizedException
+     * @throws HeidelpayApiException
      *
      * @return Charge|null
      */
     protected function _getCharge()
     {
-        return $this->_getPayment()->getChargeByIndex(0);
+        if (!$this->charge instanceof Charge) {
+            try {
+                $this->charge = $this->_getPayment()->getChargeByIndex(0);
+            } catch (HeidelpayApiException $e) {
+                $this->_logger->error($e->getMessage() . ' [' . $e->getCode() . ']');
+            }
+        }
+        return $this->charge;
     }
 
     /**
      * Returns the payment.
      *
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \heidelpayPHP\Exceptions\HeidelpayApiException
+     * @throws LocalizedException
+     * @throws HeidelpayApiException
      *
      * @return Payment
      */
     protected function _getPayment(): Payment
     {
         if ($this->_payment === null) {
-            /** @var Heidelpay $client */
             $client = $this->_moduleConfig->getHeidelpayClient();
 
             /** @var Order $order */
@@ -112,8 +121,8 @@ class Invoice extends Info
     }
 
     /**
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \heidelpayPHP\Exceptions\HeidelpayApiException
+     * @throws LocalizedException
+     * @throws HeidelpayApiException
      * @return string
      */
     public function getAccountHolder(): string
@@ -122,8 +131,8 @@ class Invoice extends Info
     }
 
     /**
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \heidelpayPHP\Exceptions\HeidelpayApiException
+     * @throws LocalizedException
+     * @throws HeidelpayApiException
      * @return string
      */
     public function getAccountIban(): string
@@ -132,8 +141,8 @@ class Invoice extends Info
     }
 
     /**
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \heidelpayPHP\Exceptions\HeidelpayApiException
+     * @throws LocalizedException
+     * @throws HeidelpayApiException
      * @return string
      */
     public function getAccountBic(): string
@@ -142,8 +151,8 @@ class Invoice extends Info
     }
 
     /**
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \heidelpayPHP\Exceptions\HeidelpayApiException
+     * @throws LocalizedException
+     * @throws HeidelpayApiException
      * @return string
      */
     public function getReference(): string
@@ -154,7 +163,7 @@ class Invoice extends Info
     /**
      * Returns the order for the invoice.
      *
-     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws LocalizedException
      *
      * @return Order
      */

@@ -7,14 +7,17 @@ use Heidelpay\MGW\Model\Config;
 use Heidelpay\MGW\Model\Method\Base;
 use heidelpayPHP\Constants\ApiResponseCodes;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
-use heidelpayPHP\Resources\Payment;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Payment\Model\MethodInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Shipment;
 use Magento\Sales\Model\Order\StatusResolver;
+use Psr\Log\LoggerInterface;
+
+use function in_array;
 
 /**
  * Observer for automatically tracking shipments in the Gateway
@@ -65,16 +68,27 @@ class ShipmentObserver implements ObserverInterface
     protected $_paymentHelper;
 
     /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * ShipmentObserver constructor.
      * @param Config $moduleConfig
      * @param StatusResolver $orderStatusResolver
      * @param PaymentHelper $paymentHelper
+     * @param LoggerInterface $logger
      */
-    public function __construct(Config $moduleConfig, StatusResolver $orderStatusResolver, PaymentHelper $paymentHelper)
-    {
+    public function __construct(
+        Config $moduleConfig,
+        StatusResolver $orderStatusResolver,
+        PaymentHelper $paymentHelper,
+        LoggerInterface $logger
+    ) {
         $this->_moduleConfig = $moduleConfig;
         $this->_orderStatusResolver = $orderStatusResolver;
         $this->_paymentHelper = $paymentHelper;
+        $this->logger = $logger;
     }
 
     /**
@@ -82,6 +96,7 @@ class ShipmentObserver implements ObserverInterface
      * @return void
      * @throws HeidelpayApiException
      * @throws NoSuchEntityException
+     * @throws InputException
      */
     public function execute(Observer $observer): void
     {
@@ -107,7 +122,7 @@ class ShipmentObserver implements ObserverInterface
 
         $this->_paymentHelper->processState($order, $payment);
 
-        if (in_array($order->getPayment()->getMethod(), self::SHIPPABLE_PAYMENT_METHODS)) {
+        if (in_array($order->getPayment()->getMethod(), self::SHIPPABLE_PAYMENT_METHODS, true)) {
             /** @var Order\Invoice $invoice */
             $invoice = $order
                 ->getInvoiceCollection()
@@ -116,8 +131,12 @@ class ShipmentObserver implements ObserverInterface
             try {
                 $payment->ship($invoice->getId());
             } catch (HeidelpayApiException $e) {
-                if ($e->getCode() !== ApiResponseCodes::API_ERROR_TRANSACTION_SHIP_NOT_ALLOWED &&
-                    $e->getCode() !== ApiResponseCodes::CORE_ERROR_INSURANCE_ALREADY_ACTIVATED) {
+                $allowedExceptions = [
+                    ApiResponseCodes::API_ERROR_TRANSACTION_SHIP_NOT_ALLOWED,
+                    ApiResponseCodes::CORE_ERROR_INSURANCE_ALREADY_ACTIVATED
+                ];
+                if (in_array($e->getCode(), $allowedExceptions, true)) {
+                    $this->logger->error($e->getMerchantMessage() . '[' . $e->getCode() . ']', ['incrementId' => $order->getIncrementId()]);
                     throw $e;
                 }
             }
