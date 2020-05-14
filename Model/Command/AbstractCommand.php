@@ -8,6 +8,7 @@ use Heidelpay\MGW\Model\Method\Observer\BaseDataAssignObserver;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
 use heidelpayPHP\Heidelpay;
 use heidelpayPHP\Resources\AbstractHeidelpayResource;
+use heidelpayPHP\Resources\Customer;
 use heidelpayPHP\Resources\TransactionTypes\AbstractTransactionType;
 use heidelpayPHP\Resources\TransactionTypes\Authorization;
 use heidelpayPHP\Resources\TransactionTypes\Charge;
@@ -21,6 +22,7 @@ use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Model\Order as SalesOrder;
 use Magento\Sales\Model\Order\Payment as OrderPayment;
 use Psr\Log\LoggerInterface;
+
 use function get_class;
 
 /**
@@ -144,6 +146,7 @@ abstract class AbstractCommand implements CommandInterface
             return null;
         }
 
+        /** @var Customer $customer */
         $customer = $this->_getClient()->fetchCustomer($customerId);
 
         if (!$this->_orderHelper->validateGatewayCustomerAgainstOrder($order, $customer)) {

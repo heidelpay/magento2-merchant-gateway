@@ -4,9 +4,11 @@ namespace Heidelpay\MGW\Model\Command;
 
 use heidelpayPHP\Constants\CancelReasonCodes;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
+use heidelpayPHP\Resources\Payment as HeidelpayPayment;
 use heidelpayPHP\Resources\TransactionTypes\Cancellation;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Payment;
 
 /**
  * Cancel Command for payments
@@ -42,11 +44,13 @@ class Cancel extends AbstractCommand
      */
     public function execute(array $commandSubject)
     {
-        /** @var Order\Payment $payment */
+        /** @var Payment $payment */
         $payment = $commandSubject['payment']->getPayment();
 
+        /** @var Order $order */
         $order = $payment->getOrder();
 
+        /** @var HeidelpayPayment $hpPayment */
         $hpPayment = $this->_getClient()->fetchPaymentByOrderId($order->getIncrementId());
 
         if ($hpPayment->isCanceled()) {

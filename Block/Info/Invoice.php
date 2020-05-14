@@ -3,6 +3,7 @@
 namespace Heidelpay\MGW\Block\Info;
 
 use Heidelpay\MGW\Model\Config;
+use heidelpayPHP\Heidelpay;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
 use heidelpayPHP\Resources\Payment;
 use heidelpayPHP\Resources\TransactionTypes\Charge;
@@ -109,6 +110,7 @@ class Invoice extends Info
     protected function _getPayment(): Payment
     {
         if ($this->_payment === null) {
+            /** @var Heidelpay $client */
             $client = $this->_moduleConfig->getHeidelpayClient();
 
             /** @var Order $order */

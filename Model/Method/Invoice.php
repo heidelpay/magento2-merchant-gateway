@@ -4,6 +4,7 @@ namespace Heidelpay\MGW\Model\Method;
 
 use Heidelpay\MGW\Model\Config;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
+use heidelpayPHP\Resources\Payment;
 use heidelpayPHP\Resources\TransactionTypes\Charge;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Event\ManagerInterface;
@@ -108,6 +109,7 @@ class Invoice extends Base
      */
     public function getAdditionalPaymentInformation(Order $order): string
     {
+        /** @var Payment $payment */
         $payment = $this->_moduleConfig
             ->getHeidelpayClient()
             ->fetchPaymentByOrderId($order->getIncrementId());

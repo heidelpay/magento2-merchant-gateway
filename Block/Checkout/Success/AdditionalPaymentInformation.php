@@ -9,6 +9,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Model\MethodInterface;
+use Magento\Sales\Model\Order;
 
 /**
  * Onepage Checkout Success Payment Information Block
@@ -65,6 +66,7 @@ class AdditionalPaymentInformation extends Template
      */
     public function getAdditionalPaymentInformation(): ?string
     {
+        /** @var Order $order */
         $order = $this->_checkoutSession->getLastRealOrder();
 
         /** @var MethodInterface $methodInstance */

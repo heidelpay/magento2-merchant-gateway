@@ -7,6 +7,7 @@ use Heidelpay\MGW\Model\Config;
 use Heidelpay\MGW\Model\Method\Observer\BaseDataAssignObserver;
 use heidelpayPHP\Exceptions\HeidelpayApiException;
 use heidelpayPHP\Resources\AbstractHeidelpayResource;
+use heidelpayPHP\Resources\Payment as HeidelpayPayment;
 use heidelpayPHP\Resources\TransactionTypes\Authorization;
 use heidelpayPHP\Resources\TransactionTypes\Charge;
 use Magento\Checkout\Model\Session;
@@ -15,7 +16,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Model\Order;
-use Magento\Sales\Model\Order\Payment as OrderPayment;
+use Magento\Sales\Model\Order\Payment;
 use Magento\Sales\Model\Order\Payment\Transaction;
 use Magento\Sales\Model\Order\Payment\Transaction\BuilderInterface;
 use Magento\Sales\Model\Order\Payment\TransactionFactory;
@@ -75,12 +76,13 @@ class Capture extends AbstractCommand
      */
     public function execute(array $commandSubject)
     {
-        /** @var OrderPayment $payment */
+        /** @var Payment $payment */
         $payment = $commandSubject['payment']->getPayment();
 
         /** @var float $amount */
         $amount = $commandSubject['amount'];
 
+        /** @var Order $order */
         $order = $payment->getOrder();
 
         /** @var string|null $paymentId */
@@ -121,6 +123,7 @@ class Capture extends AbstractCommand
      */
     protected function _chargeExisting(string $paymentId, float $amount): Charge
     {
+        /** @var HeidelpayPayment $payment */
         $payment = $this->_getClient()->fetchPayment($paymentId);
 
         /** @var Authorization|null $authorization */
@@ -170,7 +173,7 @@ class Capture extends AbstractCommand
      * @inheritDoc
      */
     protected function _setPaymentTransaction(
-        OrderPayment $payment,
+        Payment $payment,
         AbstractHeidelpayResource $resource
     ): void
     {
